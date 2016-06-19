@@ -53,6 +53,7 @@
   "onevar"        : false,
   "plusplus"      : false,
   "sub"           : false,
+  "quotmark"      : "single",
   "trailing"      : true,
   "white"         : false,
   "indent"        : 2
