@@ -1,40 +1,59 @@
-var gulp    = require('gulp');
-var eslint  = require('gulp-eslint');
-var jshint  = require('gulp-jshint');
-var mocha   = require('gulp-mocha');
+'use strict';
 
-// ESLint JS linting task
-gulp.task('eslint', function (done) {
-  return gulp
-    .src(['./routes/*', './test/**/*'])
-    .pipe(eslint())
-    .pipe(eslint.format());
-    done();
-});
+var gulp = require('gulp');
+var jshint = require('gulp-jshint');
+var jscs = require('gulp-jscs');
+var debug = require('gulp-debug');
+var nodemon = require('gulp-nodemon');
 
-// JS linting task
-gulp.task('jshint', function (done) {
-  return gulp
-    .src(['./routes/*', './test/**/*'])
+var jsFiles = ['*.js', 'routes/*.js', 'public/js/*.js'];
+var htmlFiles = ['./views/*.ejs'];
+
+gulp.task('style', function () {
+  return gulp.src(jsFiles)
+    .pipe(debug({title: 'style:'}))
     .pipe(jshint())
-    .pipe(jshint.reporter('default'))
-    .pipe(jshint.reporter('fail'));
-    done();
+    .pipe(jshint.reporter('jshint-stylish', {
+      verbose: true
+    }))
+    .pipe(jscs());
 });
 
-// TODO make gulp.paraller and gulp.series work
-//gulp.task('lint', gulp.paraller('eslint', 'jshint'));
+gulp.task('inject', function () {
+  var wiredep = require('wiredep').stream;
+  var inject = require('gulp-inject');
 
-// Mocha test task
-gulp.task('mocha', function () {
-  return gulp
-    .src(['./test/**/*', '!./test/temp'])
-    .pipe(mocha({
-      reporter: 'spec'
-    }));
+  var injectSrc = gulp.src([
+    'public/css/*.css',
+    'public/js/*.js'
+  ]);
+
+  var injectOptions = {
+    ignorePath: '/public'
+  };
+
+  var options = {
+    bowerJson: require('./bower.json'),
+    directory: './public/lib',
+    ignorePath: '../public'
+  };
+
+  return gulp.src(htmlFiles)
+    .pipe(wiredep(options))
+    .pipe(debug({title: 'inject:'}))
+    .pipe(inject(injectSrc, injectOptions))
+    .pipe(gulp.dest('./views'));
 });
 
-//gulp.task('test', gulp.series('mocha', 'lint'));
+gulp.task('serve', ['style', 'inject'], function(){
+  var options = {
+    script: 'app.js',
+    delayTime: 1,
+    watch: jsFiles
+  };
 
-// The default task (called when you run `gulp` from cli)
-gulp.task('default');
+  return nodemon(options)
+    .on('restart', function(){
+      console.log('Restarting ...');
+    });
+});
