@@ -7,7 +7,7 @@ var debug = require('gulp-debug');
 var nodemon = require('gulp-nodemon');
 
 var jsFiles = ['*.js', 'routes/*.js', 'public/js/*.js'];
-var htmlFiles = ['./views/*.ejs'];
+var htmlFiles = ['./server/views/*.ejs'];
 
 gulp.task('style', function () {
   return gulp.src(jsFiles)
@@ -42,7 +42,7 @@ gulp.task('inject', function () {
     .pipe(wiredep(options))
     .pipe(debug({title: 'inject:'}))
     .pipe(inject(injectSrc, injectOptions))
-    .pipe(gulp.dest('./views'));
+    .pipe(gulp.dest('.server/views'));
 });
 
 gulp.task('serve', ['style', 'inject'], function(){
